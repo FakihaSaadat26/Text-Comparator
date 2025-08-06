@@ -1,0 +1,43 @@
+TEXT COMPARATOR - DETAILED ANALYSIS REPORT
+==========================================
+
+DOCUMENT ANALYSIS
+-----------------
+
+Document A: sample1.txt
+- Word Count: 29
+- Sentence Count: 1
+- Unique Words: 28
+- Average Sentence Length: 29.00 words
+- Longest Sentence: 29 words
+- Top 5 Words: of(2), necessitates(1), utilization(1), understanding(1), theory(1)
+
+Document B: sample2.txt
+- Word Count: 36
+- Sentence Count: 1
+- Unique Words: 35
+- Average Sentence Length: 36.00 words
+- Longest Sentence: 36 words
+- Top 5 Words: to(2), statistical(1), minimize(1), multidimensional(1), optimization(1)
+
+COMPARISON ANALYSIS
+-------------------
+
+Jaccard Similarity: 5.00%
+Common Words Count: 3
+
+Common Words: algorithms, and, optimization
+
+Words exclusive to Document A: 25
+Words exclusive to Document B: 32
+
+LONGEST SENTENCES
+-----------------
+
+Document A longest sentence (29 words):
+The implementation of sophisticated algorithms necessitates comprehensive understanding of computational complexity theory, particularly regarding asymptotic behavior analysis and optimization strategies that facilitate efficient resource utilization in distributed systems architecture.
+
+Document B longest sentence (36 words):
+Machine learning algorithms utilize statistical methodologies to identify patterns within multidimensional datasets, employing techniques such as gradient descent optimization, regularization parameters, and cross-validation procedures to minimize overfitting while maximizing generalization capabilities across unseen data distributions.
+
+End of Report
