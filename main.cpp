@@ -55,13 +55,13 @@ int main() {
     
     string file1, file2;
     
-    cout << "\n📁 Enter the path to the first document: ";
+    cout << "\n Enter the path to the first document: ";
     getline(cin, file1);
     
-    cout << "📁 Enter the path to the second document: ";
+    cout << " Enter the path to the second document: ";
     getline(cin, file2);
     
-    cout << "\n🔄 Processing documents...\n";
+    cout << "\n Processing documents...\n";
     printSeparator('-', 50);
     
     // Analyze both documents
@@ -69,7 +69,7 @@ int main() {
     DocumentStats doc2 = analyzeDocument(file2);
     
     if (doc1.wordCount == 0 || doc2.wordCount == 0) {
-        cout << "❌ Error: Could not process one or both documents.\n";
+        cout << " Error: Could not process one or both documents.\n";
         return 1;
     }
     
@@ -88,7 +88,7 @@ int main() {
     // Write detailed report
     writeReportToFile(doc1, doc2, similarity, commonWords);
     
-    cout << "\n✅ Analysis complete! Detailed report saved to 'result.txt'\n";
+    cout << "\n Analysis complete! Detailed report saved to 'result.txt'\n";
     printSeparator();
     
     // Ask for word replacement
@@ -100,7 +100,7 @@ int main() {
 string loadFile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
-        cout << "❌ Error: Cannot open file '" << filename << "'\n";
+        cout << " Error: Cannot open file '" << filename << "'\n";
         return "";
     }
     
@@ -110,7 +110,7 @@ string loadFile(const string& filename) {
     }
     file.close();
     
-    cout << "✅ Successfully loaded: " << filename << "\n";
+    cout << " Successfully loaded: " << filename << "\n";
     return content;
 }
 
@@ -267,7 +267,7 @@ DocumentStats analyzeDocument(const string& filename) {
 
 void printHeader() {
     printSeparator();
-    cout << setw(40) << "📊 TEXT COMPARATOR 📊\n";
+    cout << setw(40) << " TEXT COMPARATOR \n";
     cout << setw(42) << "Document Analysis & Comparison Tool\n";
     printSeparator();
 }
@@ -277,7 +277,7 @@ void printSeparator(char ch, int length) {
 }
 
 void printComparisonTable(const DocumentStats& doc1, const DocumentStats& doc2, double similarity) {
-    cout << "\n📈 COMPARISON RESULTS\n";
+    cout << "\n COMPARISON RESULTS\n";
     printSeparator('-', 80);
     
     cout << left << setw(25) << "Metric" 
@@ -285,40 +285,40 @@ void printComparisonTable(const DocumentStats& doc1, const DocumentStats& doc2, 
          << setw(25) << "Document B" << "\n";
     printSeparator('-', 75);
     
-    cout << left << setw(25) << "📄 Filename:" 
+    cout << left << setw(25) << " Filename:" 
          << setw(25) << doc1.filename.substr(0, 22) 
          << setw(25) << doc2.filename.substr(0, 22) << "\n";
     
-    cout << left << setw(25) << "📝 Word Count:" 
+    cout << left << setw(25) << " Word Count:" 
          << setw(25) << doc1.wordCount 
          << setw(25) << doc2.wordCount << "\n";
     
-    cout << left << setw(25) << "📋 Sentence Count:" 
+    cout << left << setw(25) << " Sentence Count:" 
          << setw(25) << doc1.sentenceCount 
          << setw(25) << doc2.sentenceCount << "\n";
     
-    cout << left << setw(25) << "🔤 Unique Words:" 
+    cout << left << setw(25) << "Unique Words:" 
          << setw(25) << doc1.uniqueWords.size() 
          << setw(25) << doc2.uniqueWords.size() << "\n";
     
-    cout << left << setw(25) << "📏 Avg Sentence Length:" 
+    cout << left << setw(25) << " Avg Sentence Length:" 
          << setw(25) << fixed << setprecision(2) << doc1.avgSentenceLength 
          << setw(25) << doc2.avgSentenceLength << "\n";
     
-    cout << left << setw(25) << "📐 Longest Sentence:" 
+    cout << left << setw(25) << " Longest Sentence:" 
          << setw(25) << doc1.longestSentenceWordCount << " words"
          << setw(25) << doc2.longestSentenceWordCount << " words" << "\n";
     
     printSeparator('-', 75);
     
-    cout << "\n🎯 SIMILARITY ANALYSIS\n";
+    cout << "\n SIMILARITY ANALYSIS\n";
     printSeparator('-', 30);
-    cout << "🔗 Jaccard Similarity: " << fixed << setprecision(2) << similarity << "%\n";
+    cout << " Jaccard Similarity: " << fixed << setprecision(2) << similarity << "%\n";
     
     set<string> commonWords = findCommonWords(doc1.uniqueWords, doc2.uniqueWords);
-    cout << "🤝 Common Words: " << commonWords.size() << "\n";
+    cout << " Common Words: " << commonWords.size() << "\n";
     
-    cout << "\n🏆 TOP 5 FREQUENT WORDS\n";
+    cout << "\n TOP 5 FREQUENT WORDS\n";
     printSeparator('-', 50);
     
     cout << left << setw(15) << "Document A" << setw(15) << "Document B" << "\n";
@@ -337,7 +337,7 @@ void printComparisonTable(const DocumentStats& doc1, const DocumentStats& doc2, 
 void writeReportToFile(const DocumentStats& doc1, const DocumentStats& doc2, double similarity, const set<string>& commonWords) {
     ofstream report("result.txt");
     if (!report.is_open()) {
-        cout << "❌ Error: Cannot create result.txt\n";
+        cout << " Error: Cannot create result.txt\n";
         return;
     }
     
@@ -409,27 +409,27 @@ void writeReportToFile(const DocumentStats& doc1, const DocumentStats& doc2, dou
 
 void performWordReplacement(const string& originalFile1, const string& originalFile2) {
     char choice;
-    cout << "\n🔄 WORD REPLACEMENT FEATURE\n";
+    cout << "\n WORD REPLACEMENT FEATURE\n";
     printSeparator('-', 40);
     cout << "Would you like to replace any word in the documents? (y/n): ";
     cin >> choice;
     cin.ignore(); // Clear the input buffer
     
     if (choice == 'y' || choice == 'Y') {
-        cout << "\n📋 REPLACEMENT OPTIONS:\n";
+        cout << "\n REPLACEMENT OPTIONS:\n";
         cout << "1. Replace word in both documents\n";
         cout << "2. Replace word in first document only (" << originalFile1 << ")\n";
         cout << "3. Replace word in second document only (" << originalFile2 << ")\n";
-        cout << "\n🎯 Select option (1/2/3): ";
+        cout << "\n Select option (1/2/3): ";
         
         int option;
         cin >> option;
         cin.ignore();
         
         string oldWord, newWord;
-        cout << "\n🔍 Enter the word you want to replace: ";
+        cout << "\n Enter the word you want to replace: ";
         getline(cin, oldWord);
-        cout << "✏️  Enter the replacement word: ";
+        cout << " Enter the replacement word: ";
         getline(cin, newWord);
         
         vector<string> filesToProcess;
@@ -449,32 +449,32 @@ void performWordReplacement(const string& originalFile1, const string& originalF
                 filesToProcess.push_back(originalFile2);
                 break;
             default:
-                cout << "❌ Invalid option selected.\n";
+                cout << " Invalid option selected.\n";
                 return;
         }
         
-        cout << "\n🔄 Processing files...\n";
+        cout << "\n Processing files...\n";
         printSeparator('-', 30);
         
         // Process each selected file
         for (const string& filename : filesToProcess) {
-            cout << "\n📁 Processing: " << filename << "\n";
+            cout << "\n Processing: " << filename << "\n";
             
             // Load the file content
             string content = loadFile(filename);
             if (content.empty()) {
-                cout << "❌ Error: Could not load " << filename << " for replacement.\n";
+                cout << "Error: Could not load " << filename << " for replacement.\n";
                 continue;
             }
             
             // Count occurrences before replacement
             int occurrences = countWordOccurrences(content, oldWord);
             if (occurrences == 0) {
-                cout << "❌ Word '" << oldWord << "' not found in " << filename << ".\n";
+                cout << " Word '" << oldWord << "' not found in " << filename << ".\n";
                 continue;
             }
             
-            cout << "📝 Found " << occurrences << " occurrence(s) of '" << oldWord << "'\n";
+            cout << " Found " << occurrences << " occurrence(s) of '" << oldWord << "'\n";
             
             // Perform replacement
             string updatedContent = replaceWordInText(content, oldWord, newWord);
@@ -498,10 +498,10 @@ void performWordReplacement(const string& originalFile1, const string& originalF
             outputFile << updatedContent;
             outputFile.close();
             
-            cout << "✅ SUCCESS!\n";
-            cout << "📄 Original file: " << filename << "\n";
-            cout << "📄 Updated file: " << newFilename << "\n";
-            cout << "🔄 Replaced " << occurrences << " occurrence(s) of '" << oldWord << "' with '" << newWord << "'\n";
+            cout << " SUCCESS!\n";
+            cout << " Original file: " << filename << "\n";
+            cout << " Updated file: " << newFilename << "\n";
+            cout << " Replaced " << occurrences << " occurrence(s) of '" << oldWord << "' with '" << newWord << "'\n";
             
             updatedFiles.push_back(newFilename);
             filesUpdated = true;
@@ -509,7 +509,7 @@ void performWordReplacement(const string& originalFile1, const string& originalF
         
         // Generate new report if files were updated
         if (filesUpdated && !updatedFiles.empty()) {
-            cout << "\n📊 GENERATING UPDATED ANALYSIS REPORT...\n";
+            cout << "\n GENERATING UPDATED ANALYSIS REPORT...\n";
             printSeparator('-', 40);
             
             string file1ForReport, file2ForReport;
@@ -540,7 +540,7 @@ void performWordReplacement(const string& originalFile1, const string& originalF
             performWordReplacement(originalFile1, originalFile2);
         }
     } else {
-        cout << "👍 No word replacement requested.\n";
+        cout << " No word replacement requested.\n";
     }
 }
 
@@ -625,13 +625,13 @@ map<string, pair<int, int>> getCommonWordsWithCounts(const DocumentStats& doc1, 
     return commonWords;
 }
 void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& doc2) {
-    cout << "\n🤝 COMMON WORDS DETAILED ANALYSIS\n";
+    cout << "\n COMMON WORDS DETAILED ANALYSIS\n";
     printSeparator('=', 70);
     
     auto commonWords = getCommonWordsWithCounts(doc1, doc2);
     
     if (commonWords.empty()) {
-        cout << "❌ No common words found between the documents.\n";
+        cout << " No common words found between the documents.\n";
         return;
     }
     // Sort by total frequency (sum of both documents)
@@ -677,7 +677,7 @@ void generateUpdatedReport(const string& file1, const string& file2, const strin
     DocumentStats doc2 = analyzeDocument(file2);
     
     if (doc1.wordCount == 0 || doc2.wordCount == 0) {
-        cout << "❌ Error: Could not process one or both updated documents.\n";
+        cout << " Error: Could not process one or both updated documents.\n";
         return;
     }
     
@@ -692,7 +692,7 @@ void generateUpdatedReport(const string& file1, const string& file2, const strin
     
     ofstream report(reportFilename);
     if (!report.is_open()) {
-        cout << "❌ Error: Cannot create " << reportFilename << "\n";
+        cout << " Error: Cannot create " << reportFilename << "\n";
         return;
     }
     
@@ -780,23 +780,23 @@ void generateUpdatedReport(const string& file1, const string& file2, const strin
     report << "End of Updated Report\n";
     report.close();
     
-    cout << "✅ Updated analysis report generated: " << reportFilename << "\n";
+    cout << "Updated analysis report generated: " << reportFilename << "\n";
     
     // Also display brief updated comparison on screen
-    cout << "\n📊 UPDATED COMPARISON SUMMARY:\n";
+    cout << "\n UPDATED COMPARISON SUMMARY:\n";
     printSeparator('-', 40);
-    cout << "📝 Document A Word Count: " << doc1.wordCount << "\n";
-    cout << "📝 Document B Word Count: " << doc2.wordCount << "\n";
-    cout << "🔗 Updated Similarity: " << fixed << setprecision(2) << similarity << "%\n";
-    cout << "🤝 Common Words: " << commonWords.size() << "\n";
+    cout << " Document A Word Count: " << doc1.wordCount << "\n";
+    cout << " Document B Word Count: " << doc2.wordCount << "\n";
+    cout << " Updated Similarity: " << fixed << setprecision(2) << similarity << "%\n";
+    cout << " Common Words: " << commonWords.size() << "\n";
     
     if (newWordInDoc1 || newWordInDoc2) {
-        cout << "\n🔄 REPLACEMENT VERIFICATION:\n";
+        cout << "\n REPLACEMENT VERIFICATION:\n";
         if (newWordInDoc1) {
-            cout << "✅ '" << newWord << "' found " << doc1.wordFrequency.at(newWord) << " times in updated " << file1 << "\n";
+            cout << " '" << newWord << "' found " << doc1.wordFrequency.at(newWord) << " times in updated " << file1 << "\n";
         }
         if (newWordInDoc2) {
-            cout << "✅ '" << newWord << "' found " << doc2.wordFrequency.at(newWord) << " times in updated " << file2 << "\n";
+            cout << " '" << newWord << "' found " << doc2.wordFrequency.at(newWord) << " times in updated " << file2 << "\n";
         }
     }
 }
