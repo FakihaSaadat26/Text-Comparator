@@ -6,7 +6,7 @@
 CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 TARGET = text_comparator
-SOURCE = main.cpp
+SOURCE = new.cpp
 
 # Default target
 all: $(TARGET)

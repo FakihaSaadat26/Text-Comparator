@@ -23,11 +23,6 @@ struct DocumentStats {
     set<string> uniqueWords;
     map<string, int> wordFrequency;
     vector<pair<string, int>> topWords;
-    double readabilityScore;
-    int paragraphCount;
-    map<int, int> wordLengthDistribution;
-    double lexicalDiversity;
-    vector<string> sentences;
 };
 
 // Function declarations
@@ -41,24 +36,19 @@ vector<pair<string, int>> getTopFrequentWords(const map<string, int>& wordFreq, 
 set<string> getUniqueWords(const vector<string>& tokens);
 map<string, int> getWordFrequency(const vector<string>& tokens);
 set<string> findCommonWords(const set<string>& words1, const set<string>& words2);
-set<string> findExclusiveWords(const set<string>& words1, const set<string>& words2);
 pair<string, int> findLongestSentence(const string& text);
 double jaccardSimilarity(const set<string>& set1, const set<string>& set2);
-double calculateReadabilityScore(const DocumentStats& doc);
-double calculateLexicalDiversity(const DocumentStats& doc);
-map<int, int> getWordLengthDistribution(const vector<string>& tokens);
-int countParagraphs(const string& text);
-void generateWordCloud(const map<string, int>& wordFreq, const string& filename);
-void createVisualization(const DocumentStats& doc1, const DocumentStats& doc2);
-string getReadabilityLevel(double score);
 map<string, pair<int, int>> getCommonWordsWithCounts(const DocumentStats& doc1, const DocumentStats& doc2);
 void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& doc2);
-void printAdvancedAnalysis(const DocumentStats& doc1, const DocumentStats& doc2);
 void printHeader();
 void printSeparator(char ch = '=', int length = 80);
 void printComparisonTable(const DocumentStats& doc1, const DocumentStats& doc2, double similarity);
 void writeReportToFile(const DocumentStats& doc1, const DocumentStats& doc2, double similarity, const set<string>& commonWords);
+void performWordReplacement(const string& originalFile1, const string& originalFile2);
+string replaceWordInText(const string& text, const string& oldWord, const string& newWord);
+int countWordOccurrences(const string& text, const string& word);
 DocumentStats analyzeDocument(const string& filename);
+void generateUpdatedReport(const string& file1, const string& file2, const string& oldWord, const string& newWord);
 
 int main() {
     printHeader();
@@ -92,12 +82,6 @@ int main() {
     // Common words analysis
     printCommonWordsAnalysis(doc1, doc2);
     
-    // Advanced Analysis
-    printAdvancedAnalysis(doc1, doc2);
-    
-    // Generate visualizations
-    createVisualization(doc1, doc2);
-    
     // Find common words
     set<string> commonWords = findCommonWords(doc1.uniqueWords, doc2.uniqueWords);
     
@@ -106,6 +90,9 @@ int main() {
     
     cout << "\n✅ Analysis complete! Detailed report saved to 'result.txt'\n";
     printSeparator();
+    
+    // Ask for word replacement
+    performWordReplacement(file1, file2);
     
     return 0;
 }
@@ -203,15 +190,6 @@ set<string> findCommonWords(const set<string>& words1, const set<string>& words2
                     inserter(common, common.begin()));
     return common;
 }
-
-set<string> findExclusiveWords(const set<string>& words1, const set<string>& words2) {
-    set<string> exclusive;
-    set_difference(words1.begin(), words1.end(),
-                  words2.begin(), words2.end(),
-                  inserter(exclusive, exclusive.begin()));
-    return exclusive;
-}
-
 pair<string, int> findLongestSentence(const string& text) {
     string longestSentence;
     int maxWords = 0;
@@ -275,31 +253,10 @@ DocumentStats analyzeDocument(const string& filename) {
     
     stats.wordCount = countWords(tokens);
     stats.sentenceCount = countSentences(content);
-    stats.paragraphCount = countParagraphs(content);
     stats.avgSentenceLength = calculateAvgSentenceLength(stats.wordCount, stats.sentenceCount);
     stats.uniqueWords = getUniqueWords(tokens);
     stats.wordFrequency = getWordFrequency(tokens);
     stats.topWords = getTopFrequentWords(stats.wordFrequency);
-    stats.wordLengthDistribution = getWordLengthDistribution(tokens);
-    stats.readabilityScore = calculateReadabilityScore(stats);
-    stats.lexicalDiversity = calculateLexicalDiversity(stats);
-    
-    // Store sentences for analysis
-    istringstream iss(content);
-    string sentence;
-    char c;
-    while (iss.get(c)) {
-        sentence += c;
-        if (c == '.' || c == '!' || c == '?') {
-            if (!sentence.empty()) {
-                stats.sentences.push_back(sentence);
-            }
-            sentence.clear();
-        }
-    }
-    if (!sentence.empty()) {
-        stats.sentences.push_back(sentence);
-    }
     
     auto longestInfo = findLongestSentence(content);
     stats.longestSentence = longestInfo.first;
@@ -436,14 +393,7 @@ void writeReportToFile(const DocumentStats& doc1, const DocumentStats& doc2, dou
         }
     }
     report << "\n\n";
-    
-    // Exclusive words
-    set<string> exclusive1 = findExclusiveWords(doc1.uniqueWords, doc2.uniqueWords);
-    set<string> exclusive2 = findExclusiveWords(doc2.uniqueWords, doc1.uniqueWords);
-    
-    report << "Words exclusive to Document A: " << exclusive1.size() << "\n";
-    report << "Words exclusive to Document B: " << exclusive2.size() << "\n\n";
-    
+     
     report << "LONGEST SENTENCES\n";
     report << "-----------------\n\n";
     report << "Document A longest sentence (" << doc1.longestSentenceWordCount << " words):\n";
@@ -455,86 +405,213 @@ void writeReportToFile(const DocumentStats& doc1, const DocumentStats& doc2, dou
     report.close();
 }
 
-// UNIQUE ADVANCED FEATURES
+// WORD REPLACEMENT FUNCTIONALITY
 
-double calculateReadabilityScore(const DocumentStats& doc) {
-    // Improved Flesch Reading Ease Score with better syllable counting
-    if (doc.sentenceCount == 0 || doc.wordCount == 0) return 50.0;
+void performWordReplacement(const string& originalFile1, const string& originalFile2) {
+    char choice;
+    cout << "\n🔄 WORD REPLACEMENT FEATURE\n";
+    printSeparator('-', 40);
+    cout << "Would you like to replace any word in the documents? (y/n): ";
+    cin >> choice;
+    cin.ignore(); // Clear the input buffer
     
-    double avgWordsPerSentence = static_cast<double>(doc.wordCount) / doc.sentenceCount;
-    
-    // Better syllable counting
-    double totalSyllables = 0;
-    for (const auto& wordPair : doc.wordFrequency) {
-        const string& word = wordPair.first;
-        int frequency = wordPair.second;
+    if (choice == 'y' || choice == 'Y') {
+        cout << "\n📋 REPLACEMENT OPTIONS:\n";
+        cout << "1. Replace word in both documents\n";
+        cout << "2. Replace word in first document only (" << originalFile1 << ")\n";
+        cout << "3. Replace word in second document only (" << originalFile2 << ")\n";
+        cout << "\n🎯 Select option (1/2/3): ";
         
-        // Improved syllable counting
-        int syllables = 0;
-        bool previousWasVowel = false;
+        int option;
+        cin >> option;
+        cin.ignore();
         
-        for (char c : word) {
-            bool isVowel = (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u' || c == 'y');
-            if (isVowel && !previousWasVowel) {
-                syllables++;
+        string oldWord, newWord;
+        cout << "\n🔍 Enter the word you want to replace: ";
+        getline(cin, oldWord);
+        cout << "✏️  Enter the replacement word: ";
+        getline(cin, newWord);
+        
+        vector<string> filesToProcess;
+        vector<string> updatedFiles;
+        bool filesUpdated = false;
+        
+        // Determine which files to process
+        switch(option) {
+            case 1:
+                filesToProcess.push_back(originalFile1);
+                filesToProcess.push_back(originalFile2);
+                break;
+            case 2:
+                filesToProcess.push_back(originalFile1);
+                break;
+            case 3:
+                filesToProcess.push_back(originalFile2);
+                break;
+            default:
+                cout << "❌ Invalid option selected.\n";
+                return;
+        }
+        
+        cout << "\n🔄 Processing files...\n";
+        printSeparator('-', 30);
+        
+        // Process each selected file
+        for (const string& filename : filesToProcess) {
+            cout << "\n📁 Processing: " << filename << "\n";
+            
+            // Load the file content
+            string content = loadFile(filename);
+            if (content.empty()) {
+                cout << "❌ Error: Could not load " << filename << " for replacement.\n";
+                continue;
             }
-            previousWasVowel = isVowel;
+            
+            // Count occurrences before replacement
+            int occurrences = countWordOccurrences(content, oldWord);
+            if (occurrences == 0) {
+                cout << "❌ Word '" << oldWord << "' not found in " << filename << ".\n";
+                continue;
+            }
+            
+            cout << "📝 Found " << occurrences << " occurrence(s) of '" << oldWord << "'\n";
+            
+            // Perform replacement
+            string updatedContent = replaceWordInText(content, oldWord, newWord);
+            
+            // Create new filename
+            string newFilename;
+            size_t dotPos = filename.find_last_of('.');
+            if (dotPos != string::npos) {
+                newFilename = filename.substr(0, dotPos) + "_updated" + filename.substr(dotPos);
+            } else {
+                newFilename = filename + "_updated.txt";
+            }
+            
+            // Write updated content to new file
+            ofstream outputFile(newFilename);
+            if (!outputFile.is_open()) {
+                cout << "❌ Error: Could not create output file " << newFilename << ".\n";
+                continue;
+            }
+            
+            outputFile << updatedContent;
+            outputFile.close();
+            
+            cout << "✅ SUCCESS!\n";
+            cout << "📄 Original file: " << filename << "\n";
+            cout << "📄 Updated file: " << newFilename << "\n";
+            cout << "🔄 Replaced " << occurrences << " occurrence(s) of '" << oldWord << "' with '" << newWord << "'\n";
+            
+            updatedFiles.push_back(newFilename);
+            filesUpdated = true;
         }
         
-        // Handle silent e
-        if (word.length() > 2 && word.back() == 'e' && syllables > 1) {
-            syllables--;
+        // Generate new report if files were updated
+        if (filesUpdated && !updatedFiles.empty()) {
+            cout << "\n📊 GENERATING UPDATED ANALYSIS REPORT...\n";
+            printSeparator('-', 40);
+            
+            string file1ForReport, file2ForReport;
+            
+            if (option == 1 && updatedFiles.size() == 2) {
+                // Both files updated
+                file1ForReport = updatedFiles[0];
+                file2ForReport = updatedFiles[1];
+            } else if (option == 2) {
+                // Only first file updated
+                file1ForReport = updatedFiles[0];
+                file2ForReport = originalFile2;
+            } else if (option == 3) {
+                // Only second file updated
+                file1ForReport = originalFile1;
+                file2ForReport = updatedFiles[0];
+            }
+            
+            generateUpdatedReport(file1ForReport, file2ForReport, oldWord, newWord);
         }
         
-        // Every word has at least 1 syllable
-        if (syllables == 0) syllables = 1;
+        // Ask if user wants to replace more words
+        cout << "\nWould you like to replace another word? (y/n): ";
+        cin >> choice;
+        cin.ignore();
         
-        totalSyllables += syllables * frequency;
+        if (choice == 'y' || choice == 'Y') {
+            performWordReplacement(originalFile1, originalFile2);
+        }
+    } else {
+        cout << "👍 No word replacement requested.\n";
+    }
+}
+
+string replaceWordInText(const string& text, const string& oldWord, const string& newWord) {
+    string result = text;
+    string oldWordLower = oldWord;
+    transform(oldWordLower.begin(), oldWordLower.end(), oldWordLower.begin(), ::tolower);
+    
+    // Convert to lowercase for case-insensitive matching
+    string textLower = text;
+    transform(textLower.begin(), textLower.end(), textLower.begin(), ::tolower);
+    
+    size_t pos = 0;
+    while ((pos = textLower.find(oldWordLower, pos)) != string::npos) {
+        // Check if it's a whole word (not part of another word)
+        bool isWholeWord = true;
+        
+        // Check character before
+        if (pos > 0 && isalnum(textLower[pos - 1])) {
+            isWholeWord = false;
+        }
+        
+        // Check character after
+        if (pos + oldWordLower.length() < textLower.length() && 
+            isalnum(textLower[pos + oldWordLower.length()])) {
+            isWholeWord = false;
+        }
+        
+        if (isWholeWord) {
+            // Replace in the original text (preserving original case)
+            result.replace(pos, oldWord.length(), newWord);
+            textLower.replace(pos, oldWordLower.length(), newWord);
+            pos += newWord.length();
+        } else {
+            pos += oldWordLower.length();
+        }
     }
     
-    double avgSyllablesPerWord = totalSyllables / doc.wordCount;
+    return result;
+}
+
+int countWordOccurrences(const string& text, const string& word) {
+    int count = 0;
+    string wordLower = word;
+    transform(wordLower.begin(), wordLower.end(), wordLower.begin(), ::tolower);
     
-    // Flesch Reading Ease formula: 206.835 - (1.015 × ASL) - (84.6 × ASW)
-    double score = 206.835 - (1.015 * avgWordsPerSentence) - (84.6 * avgSyllablesPerWord);
+    string textLower = text;
+    transform(textLower.begin(), textLower.end(), textLower.begin(), ::tolower);
     
-    // Clamp between 0-100
-    return max(0.0, min(100.0, score));
-}
-
-double calculateLexicalDiversity(const DocumentStats& doc) {
-    // Type-Token Ratio (TTR)
-    if (doc.wordCount == 0) return 0.0;
-    return static_cast<double>(doc.uniqueWords.size()) / doc.wordCount * 100.0;
-}
-
-map<int, int> getWordLengthDistribution(const vector<string>& tokens) {
-    map<int, int> distribution;
-    for (const string& word : tokens) {
-        distribution[word.length()]++;
-    }
-    return distribution;
-}
-
-int countParagraphs(const string& text) {
-    int count = 1; // Start with 1 paragraph
-    for (size_t i = 0; i < text.length() - 1; i++) {
-        if (text[i] == '\n' && text[i + 1] == '\n') {
+    size_t pos = 0;
+    while ((pos = textLower.find(wordLower, pos)) != string::npos) {
+        // Check if it's a whole word
+        bool isWholeWord = true;
+        
+        if (pos > 0 && isalnum(textLower[pos - 1])) {
+            isWholeWord = false;
+        }
+        
+        if (pos + wordLower.length() < textLower.length() && 
+            isalnum(textLower[pos + wordLower.length()])) {
+            isWholeWord = false;
+        }
+        
+        if (isWholeWord) {
             count++;
         }
+        pos += wordLower.length();
     }
+    
     return count;
 }
-
-string getReadabilityLevel(double score) {
-    if (score >= 90) return "Very Easy (5th grade) 📗";
-    else if (score >= 80) return "Easy (6th grade) 📘";
-    else if (score >= 70) return "Fairly Easy (7th grade) 📙";
-    else if (score >= 60) return "Standard (8th-9th grade) 📕";
-    else if (score >= 50) return "Fairly Difficult (10th-12th grade) 📔";
-    else if (score >= 30) return "Difficult (College level) 📓";
-    else return "Very Difficult (Graduate level) 📚";
-}
-
 map<string, pair<int, int>> getCommonWordsWithCounts(const DocumentStats& doc1, const DocumentStats& doc2) {
     map<string, pair<int, int>> commonWords;
     
@@ -547,7 +624,6 @@ map<string, pair<int, int>> getCommonWordsWithCounts(const DocumentStats& doc1, 
     
     return commonWords;
 }
-
 void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& doc2) {
     cout << "\n🤝 COMMON WORDS DETAILED ANALYSIS\n";
     printSeparator('=', 70);
@@ -558,7 +634,6 @@ void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& do
         cout << "❌ No common words found between the documents.\n";
         return;
     }
-    
     // Sort by total frequency (sum of both documents)
     vector<pair<string, pair<int, int>>> sortedCommon(commonWords.begin(), commonWords.end());
     sort(sortedCommon.begin(), sortedCommon.end(), 
@@ -592,166 +667,136 @@ void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& do
              << setw(15) << totalUses
              << setw(15) << (to_string(avgFreq).substr(0, 4) + "%") << "\n";
     }
-    
-    cout << "\n📊 Common Words Statistics:\n";
-    cout << "• Total common words: " << commonWords.size() << "\n";
-    cout << "• Most shared word: '" << sortedCommon[0].first 
-         << "' (used " << (sortedCommon[0].second.first + sortedCommon[0].second.second) << " times total)\n";
-    
-    // Calculate vocabulary overlap
-    double overlapPercentage = (static_cast<double>(commonWords.size()) / 
-                               max(doc1.uniqueWords.size(), doc2.uniqueWords.size())) * 100;
-    cout << "• Vocabulary overlap: " << fixed << setprecision(1) << overlapPercentage << "%\n";
 }
 
-void generateWordCloud(const map<string, int>& wordFreq, const string& filename) {
-    // Generate ASCII word cloud representation
-    ofstream cloud(filename + "_wordcloud.txt");
-    if (!cloud.is_open()) return;
+void generateUpdatedReport(const string& file1, const string& file2, const string& oldWord, const string& newWord) {
+    cout << "🔄 Analyzing updated documents...\n";
     
-    cloud << "=== WORD CLOUD VISUALIZATION ===" << "\n\n";
+    // Analyze both documents
+    DocumentStats doc1 = analyzeDocument(file1);
+    DocumentStats doc2 = analyzeDocument(file2);
     
-    vector<pair<string, int>> words(wordFreq.begin(), wordFreq.end());
-    sort(words.begin(), words.end(), [](const auto& a, const auto& b) {
-        return a.second > b.second;
-    });
+    if (doc1.wordCount == 0 || doc2.wordCount == 0) {
+        cout << "❌ Error: Could not process one or both updated documents.\n";
+        return;
+    }
     
-    // Create visual representation
-    for (size_t i = 0; i < min(size_t(20), words.size()); i++) {
-        string word = words[i].first;
-        int freq = words[i].second;
-        
-        // Make word size proportional to frequency
-        if (freq >= 5) {
-            transform(word.begin(), word.end(), word.begin(), ::toupper);
+    // Calculate similarity
+    double similarity = jaccardSimilarity(doc1.uniqueWords, doc2.uniqueWords);
+    
+    // Find common words
+    set<string> commonWords = findCommonWords(doc1.uniqueWords, doc2.uniqueWords);
+    
+    // Create updated report filename
+    string reportFilename = "result_updated.txt";
+    
+    ofstream report(reportFilename);
+    if (!report.is_open()) {
+        cout << "❌ Error: Cannot create " << reportFilename << "\n";
+        return;
+    }
+    
+    report << "TEXT COMPARATOR - UPDATED ANALYSIS REPORT\n";
+    report << "==========================================\n\n";
+    
+    report << "WORD REPLACEMENT SUMMARY\n";
+    report << "------------------------\n";
+    report << "Replaced word: '" << oldWord << "' -> '" << newWord << "'\n";
+    report << "Documents analyzed: " << file1 << " and " << file2 << "\n\n";
+    
+    report << "DOCUMENT ANALYSIS (AFTER REPLACEMENT)\n";
+    report << "------------------------------------\n\n";
+    
+    // Document A Analysis
+    report << "Document A: " << doc1.filename << "\n";
+    report << "- Word Count: " << doc1.wordCount << "\n";
+    report << "- Sentence Count: " << doc1.sentenceCount << "\n";
+    report << "- Unique Words: " << doc1.uniqueWords.size() << "\n";
+    report << "- Average Sentence Length: " << fixed << setprecision(2) << doc1.avgSentenceLength << " words\n";
+    report << "- Longest Sentence: " << doc1.longestSentenceWordCount << " words\n";
+    report << "- Top 5 Words: ";
+    for (int i = 0; i < min(5, (int)doc1.topWords.size()); i++) {
+        report << doc1.topWords[i].first << "(" << doc1.topWords[i].second << ")";
+        if (i < min(4, (int)doc1.topWords.size() - 1)) report << ", ";
+    }
+    report << "\n\n";
+    
+    // Document B Analysis
+    report << "Document B: " << doc2.filename << "\n";
+    report << "- Word Count: " << doc2.wordCount << "\n";
+    report << "- Sentence Count: " << doc2.sentenceCount << "\n";
+    report << "- Unique Words: " << doc2.uniqueWords.size() << "\n";
+    report << "- Average Sentence Length: " << fixed << setprecision(2) << doc2.avgSentenceLength << " words\n";
+    report << "- Longest Sentence: " << doc2.longestSentenceWordCount << " words\n";
+    report << "- Top 5 Words: ";
+    for (int i = 0; i < min(5, (int)doc2.topWords.size()); i++) {
+        report << doc2.topWords[i].first << "(" << doc2.topWords[i].second << ")";
+        if (i < min(4, (int)doc2.topWords.size() - 1)) report << ", ";
+    }
+    report << "\n\n";
+    
+    // Comparison Analysis
+    report << "COMPARISON ANALYSIS (AFTER REPLACEMENT)\n";
+    report << "---------------------------------------\n\n";
+    report << "Jaccard Similarity: " << fixed << setprecision(2) << similarity << "%\n";
+    report << "Common Words Count: " << commonWords.size() << "\n\n";
+    
+    report << "Common Words: ";
+    int count = 0;
+    for (const string& word : commonWords) {
+        if (count > 0) report << ", ";
+        report << word;
+        count++;
+        if (count >= 20) {
+            report << "... (and " << (commonWords.size() - 20) << " more)";
+            break;
         }
-        
-        cloud << word;
-        for (int j = 0; j < freq && j < 10; j++) {
-            cloud << "*";
+    }
+    report << "\n\n";
+    
+    report << "LONGEST SENTENCES (AFTER REPLACEMENT)\n";
+    report << "------------------------------------\n\n";
+    report << "Document A longest sentence (" << doc1.longestSentenceWordCount << " words):\n";
+    report << doc1.longestSentence << "\n\n";
+    report << "Document B longest sentence (" << doc2.longestSentenceWordCount << " words):\n";
+    report << doc2.longestSentence << "\n\n";
+    
+    // Check if replacement word appears in analysis
+    bool newWordInDoc1 = doc1.wordFrequency.find(newWord) != doc1.wordFrequency.end();
+    bool newWordInDoc2 = doc2.wordFrequency.find(newWord) != doc2.wordFrequency.end();
+    
+    if (newWordInDoc1 || newWordInDoc2) {
+        report << "REPLACEMENT WORD ANALYSIS\n";
+        report << "------------------------\n";
+        if (newWordInDoc1) {
+            report << "'" << newWord << "' appears " << doc1.wordFrequency.at(newWord) << " times in Document A\n";
         }
-        cloud << " (" << freq << ")\n";
+        if (newWordInDoc2) {
+            report << "'" << newWord << "' appears " << doc2.wordFrequency.at(newWord) << " times in Document B\n";
+        }
+        report << "\n";
     }
     
-    cloud.close();
-}
-
-void createVisualization(const DocumentStats& doc1, const DocumentStats& doc2) {
-    // Generate word clouds
-    generateWordCloud(doc1.wordFrequency, "doc1");
-    generateWordCloud(doc2.wordFrequency, "doc2");
+    report << "End of Updated Report\n";
+    report.close();
     
-    // Create comparison chart
-    ofstream chart("comparison_chart.txt");
-    if (chart.is_open()) {
-        chart << "=== VISUAL COMPARISON CHART ===\n\n";
-        
-        // Word count bars
-        chart << "Word Count Comparison:\n";
-        chart << "Document A: ";
-        for (int i = 0; i < min(doc1.wordCount / 5, 50); i++) chart << "█";
-        chart << " (" << doc1.wordCount << ")\n";
-        
-        chart << "Document B: ";
-        for (int i = 0; i < min(doc2.wordCount / 5, 50); i++) chart << "█";
-        chart << " (" << doc2.wordCount << ")\n\n";
-        
-        // Readability comparison
-        chart << "Readability Score Comparison:\n";
-        chart << "Document A: ";
-        for (int i = 0; i < static_cast<int>(doc1.readabilityScore / 2); i++) chart << "▓";
-        chart << " (" << fixed << setprecision(1) << doc1.readabilityScore << ")\n";
-        
-        chart << "Document B: ";
-        for (int i = 0; i < static_cast<int>(doc2.readabilityScore / 2); i++) chart << "▓";
-        chart << " (" << fixed << setprecision(1) << doc2.readabilityScore << ")\n";
-        
-        chart.close();
+    cout << "✅ Updated analysis report generated: " << reportFilename << "\n";
+    
+    // Also display brief updated comparison on screen
+    cout << "\n📊 UPDATED COMPARISON SUMMARY:\n";
+    printSeparator('-', 40);
+    cout << "📝 Document A Word Count: " << doc1.wordCount << "\n";
+    cout << "📝 Document B Word Count: " << doc2.wordCount << "\n";
+    cout << "🔗 Updated Similarity: " << fixed << setprecision(2) << similarity << "%\n";
+    cout << "🤝 Common Words: " << commonWords.size() << "\n";
+    
+    if (newWordInDoc1 || newWordInDoc2) {
+        cout << "\n🔄 REPLACEMENT VERIFICATION:\n";
+        if (newWordInDoc1) {
+            cout << "✅ '" << newWord << "' found " << doc1.wordFrequency.at(newWord) << " times in updated " << file1 << "\n";
+        }
+        if (newWordInDoc2) {
+            cout << "✅ '" << newWord << "' found " << doc2.wordFrequency.at(newWord) << " times in updated " << file2 << "\n";
+        }
     }
-}
-
-void printAdvancedAnalysis(const DocumentStats& doc1, const DocumentStats& doc2) {
-    cout << "\n🧠 ADVANCED LINGUISTIC ANALYSIS\n";
-    printSeparator('=', 80);
-    
-    cout << left << setw(35) << "📊 Metric" 
-         << setw(22) << "Document A" 
-         << setw(23) << "Document B" << "\n";
-    printSeparator('-', 80);
-    
-    cout << left << setw(35) << "📚 Readability Score:" 
-         << setw(22) << (to_string(static_cast<int>(doc1.readabilityScore)) + "/100")
-         << setw(23) << (to_string(static_cast<int>(doc2.readabilityScore)) + "/100") << "\n";
-    
-    cout << left << setw(35) << "📖 Reading Level:" 
-         << setw(22) << getReadabilityLevel(doc1.readabilityScore).substr(0, 21)
-         << setw(23) << getReadabilityLevel(doc2.readabilityScore).substr(0, 22) << "\n";
-    
-    cout << left << setw(35) << "🎯 Lexical Diversity (TTR):" 
-         << setw(22) << (to_string(static_cast<int>(doc1.lexicalDiversity)) + "%")
-         << setw(23) << (to_string(static_cast<int>(doc2.lexicalDiversity)) + "%") << "\n";
-    
-    cout << left << setw(35) << "📄 Paragraph Count:" 
-         << setw(22) << doc1.paragraphCount 
-         << setw(23) << doc2.paragraphCount << "\n";
-    
-    // Calculate average word lengths properly
-    double avgLen1 = 0.0, avgLen2 = 0.0;
-    for (const auto& pair : doc1.wordFrequency) {
-        avgLen1 += pair.first.length() * pair.second;
-    }
-    for (const auto& pair : doc2.wordFrequency) {
-        avgLen2 += pair.first.length() * pair.second;
-    }
-    avgLen1 /= doc1.wordCount;
-    avgLen2 /= doc2.wordCount;
-    
-    cout << left << setw(35) << "📏 Average Word Length:" 
-         << setw(22) << (to_string(avgLen1).substr(0, 4) + " letters")
-         << setw(23) << (to_string(avgLen2).substr(0, 4) + " letters") << "\n";
-    
-    // Calculate sentence complexity
-    double sentenceComplexity1 = doc1.avgSentenceLength;
-    double sentenceComplexity2 = doc2.avgSentenceLength;
-    
-    cout << left << setw(35) << "🔗 Sentence Complexity:" 
-         << setw(22) << (sentenceComplexity1 > 20 ? "High 🔴" : 
-                         sentenceComplexity1 > 15 ? "Medium 🟡" : "Low 🟢")
-         << setw(23) << (sentenceComplexity2 > 20 ? "High 🔴" : 
-                         sentenceComplexity2 > 15 ? "Medium 🟡" : "Low 🟢") << "\n";
-    
-    printSeparator('-', 80);
-    
-    // Document comparison insights
-    cout << "\n🔍 DOCUMENT INSIGHTS\n";
-    printSeparator('-', 50);
-    
-    if (doc1.readabilityScore > doc2.readabilityScore + 5) {
-        cout << "📖 Document A is significantly easier to read\n";
-    } else if (doc2.readabilityScore > doc1.readabilityScore + 5) {
-        cout << "📖 Document B is significantly easier to read\n";
-    } else {
-        cout << "📖 Both documents have similar reading difficulty\n";
-    }
-    
-    if (doc1.lexicalDiversity > doc2.lexicalDiversity + 5) {
-        cout << "🎯 Document A has richer vocabulary diversity\n";
-    } else if (doc2.lexicalDiversity > doc1.lexicalDiversity + 5) {
-        cout << "🎯 Document B has richer vocabulary diversity\n";
-    } else {
-        cout << "🎯 Both documents have similar vocabulary richness\n";
-    }
-    
-    if (doc1.avgSentenceLength > doc2.avgSentenceLength + 3) {
-        cout << "📝 Document A uses more complex sentence structures\n";
-    } else if (doc2.avgSentenceLength > doc1.avgSentenceLength + 3) {
-        cout << "📝 Document B uses more complex sentence structures\n";
-    } else {
-        cout << "📝 Both documents have similar sentence complexity\n";
-    }
-    
-    cout << "\n📈 VISUALIZATION FILES GENERATED:\n";
-    cout << "• doc1_wordcloud.txt - Word frequency visualization for Document A\n";
-    cout << "• doc2_wordcloud.txt - Word frequency visualization for Document B\n";
-    cout << "• comparison_chart.txt - Visual comparison charts\n";
 }

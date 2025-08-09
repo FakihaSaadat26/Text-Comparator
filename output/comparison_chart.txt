@@ -1,9 +1,0 @@
-=== VISUAL COMPARISON CHART ===
-
-Word Count Comparison:
-Document A: █████ (29)
-Document B: ███████ (36)
-
-Readability Score Comparison:
-Document A:  (0.0)
-Document B:  (0.0)
