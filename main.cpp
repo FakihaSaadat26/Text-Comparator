@@ -97,6 +97,9 @@ int main() {
     return 0;
 }
 
+
+// loads all text from a file into a single string (with spaces between lines), 
+//reports success or failure, and returns that string.
 string loadFile(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -114,6 +117,7 @@ string loadFile(const string& filename) {
     return content;
 }
 
+//Converting to lowercase, Preserving only alphabetic characters, spaces, and sentence-ending punctuation
 string normalizeText(const string& text) {
     string normalized;
     for (char c : text) {
@@ -126,6 +130,8 @@ string normalizeText(const string& text) {
     return normalized;
 }
 
+//Breaks normalized text into individual words
+// takes a string of text and splits it into words (tokens), returning them in a vector<string>.
 vector<string> tokenize(const string& text) {
     vector<string> tokens;
     istringstream iss(normalizeText(text));
