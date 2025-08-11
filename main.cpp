@@ -55,13 +55,13 @@ int main() {
     
     string file1, file2;
     
-    cout << "\n Enter the path to the first document: ";
+    cout << "\n Enter path to first document: ";
     getline(cin, file1);
     
-    cout << " Enter the path to the second document: ";
+    cout << " Enter path to second document: ";
     getline(cin, file2);
     
-    cout << "\n Processing documents...\n";
+    cout << "\n Processing documents: \n";
     printSeparator('-', 50);
     
     // Analyze both documents
@@ -88,7 +88,7 @@ int main() {
     // Write detailed report
     writeReportToFile(doc1, doc2, similarity, commonWords);
     
-    cout << "\n Analysis complete! Detailed report saved to 'result.txt'\n";
+    cout << "\n Completed Successfully!\n Detailed report saved to 'result.txt'\n";
     printSeparator();
     
     // Ask for word replacement
@@ -110,7 +110,7 @@ string loadFile(const string& filename) {
     }
     file.close();
     
-    cout << " Successfully loaded: " << filename << "\n";
+    cout << " Successfully loaded into the " << filename << "\n";
     return content;
 }
 
@@ -306,8 +306,8 @@ void printComparisonTable(const DocumentStats& doc1, const DocumentStats& doc2, 
          << setw(25) << doc2.avgSentenceLength << "\n";
     
     cout << left << setw(25) << " Longest Sentence:" 
-         << setw(25) << doc1.longestSentenceWordCount << " words"
-         << setw(25) << doc2.longestSentenceWordCount << " words" << "\n";
+         << setw(25) << doc1.longestSentenceWordCount 
+         << setw(25) << doc2.longestSentenceWordCount << "\n";
     
     printSeparator('-', 75);
     
@@ -453,7 +453,7 @@ void performWordReplacement(const string& originalFile1, const string& originalF
                 return;
         }
         
-        cout << "\n Processing files...\n";
+        cout << "\n Processing files: \n";
         printSeparator('-', 30);
         
         // Process each selected file
@@ -491,7 +491,7 @@ void performWordReplacement(const string& originalFile1, const string& originalF
             // Write updated content to new file
             ofstream outputFile(newFilename);
             if (!outputFile.is_open()) {
-                cout << "❌ Error: Could not create output file " << newFilename << ".\n";
+                cout << " Error: Could not create output file " << newFilename << ".\n";
                 continue;
             }
             
@@ -670,7 +670,7 @@ void printCommonWordsAnalysis(const DocumentStats& doc1, const DocumentStats& do
 }
 
 void generateUpdatedReport(const string& file1, const string& file2, const string& oldWord, const string& newWord) {
-    cout << "🔄 Analyzing updated documents...\n";
+    cout << " Analyzing updated documents...\n";
     
     // Analyze both documents
     DocumentStats doc1 = analyzeDocument(file1);
